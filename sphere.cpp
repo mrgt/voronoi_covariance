@@ -1,20 +1,23 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/point_generators_3.h>
 #include <fstream>
-#include "sphere.hpp"
+#include <vector>
+#include <CGAL/voronoi_covariance_sphere_3.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 
 int main()
 {
-  std::vector <K::Point_3> p0;
-  make_unit_sphere<K>(p0, 20);
+  typedef K::Point_3 Point;
+  std::vector <Point> p;
+  CGAL::internal::make_icosahedron<Point>(1.0, std::back_inserter(p));
+  //make_dodecahedron<Point>(1.0, std::back_inserter(p));
 
   std::ofstream op("/tmp/sphere.cloud");
-  for (size_t i = 0; i < p0.size(); ++i)
-    op << p0[i] << "\n";
+  for (size_t i = 0; i < p.size(); ++i)
+    op << p[i] << "\n";
 
   std::ofstream ow("/tmp/sphere.w");
-  for (size_t i = 0; i < p0.size(); ++i)
+  for (size_t i = 0; i < p.size(); ++i)
     ow << "1\n";
 }
