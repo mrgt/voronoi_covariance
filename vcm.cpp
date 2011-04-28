@@ -127,17 +127,19 @@ typedef CGAL::Voronoi_covariance_3<FT> Covariance;
 
 int main(int argc, char **argv)
 {
-  double R = 0.1, r = .01;
-  size_t N = 30;
+  double R, r;
+  size_t N = 20;
 
   po::options_description desc("Options");
   desc.add_options()
     ("help", "produce help message")
-    ("N", po::value<size_t>(&N)->default_value(30),
-     "number of planes used to discretize sphere")
-    ("R", po::value<double>(&R)->default_value(.1),
+    ("N", po::value<size_t>(&N)->default_value(20),
+     "number of planes used to discretize sphere:\n"
+     "    20 for dodecahedron\n"
+     "    12 for icosahedron")
+    ("R", po::value<double>(&R)->default_value(0.1),
      "offset radius")
-    ("r", po::value<double>(&r)->default_value(.01),
+    ("r", po::value<double>(&r)->default_value(0),
      "convolution radius")
     ("input", po::value< std::vector<std::string> >(),
      "input cloud/xyz files");
@@ -189,6 +191,9 @@ int main(int argc, char **argv)
 	  offset (points, cov, R, N);
 	  save (fncov, cov);
 	}
+
+      if (r == 0)
+	continue;
 
       std::cerr << "convolving " << source << " into " << fnccov << "\n";
 
