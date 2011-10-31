@@ -3,9 +3,12 @@
 #include <list>
 #include <CGAL/array.h>
 #include <CGAL/voronoi_covariance_sphere_3.h>
+#include <CGAL/Convex_hull_traits_3.h>
+#include <CGAL/convex_hull_3.h>
 
 CGAL_BEGIN_NAMESPACE
 
+#define DEBUG_SHOW(x) std::cerr << #x << " = " << (x) << "\n";
 namespace internal {
 
    template <class FT, class Array>
@@ -45,10 +48,9 @@ namespace internal {
       
    private:
       Result_type _result;
-      size_t _ntri;
-      
+
    public:
-      Covariance_accumulator_3() : _ntri(0)
+      Covariance_accumulator_3()
       {
 	 std::fill (_result.begin(), _result.end(), FT(0));
       }
@@ -135,25 +137,77 @@ namespace internal {
    {
       typedef typename DT::Vertex_handle Vertex_handle;
       typedef typename DT::Point Point;
-	
-      DT local = sphere;
-	
-      std::list<Vertex_handle> vertices;
-      dt.incident_vertices(v,std::back_inserter(vertices));
-	
-      std::vector<Point> points;
+      typedef typename DT::Geom_traits::Kernel K;
+      typedef typename K::Vector_3 Vector;
+      typedef typename CGAL::Convex_hull_traits_3<K> Traits;
+      typedef typename Traits::Polyhedron_3 Polyhedron;
+      typedef typename Polyhedron::Facet Facet;
+      typedef typename Polyhedron::Facet_handle Facet_handle;
+
+      std::list<Vertex_handle> incident_vertices;
+      dt.incident_vertices(v,std::back_inserter(incident_vertices));
+
+      // construct intersection of half-planes using the convex hull function
+      std::vector<Point> dual_points;
       for(typename std::list<Vertex_handle>::iterator
-	     it = vertices.begin();
-	  it != vertices.end(); ++it)
-      {
-	 points.push_back( CGAL::ORIGIN + ((*it)->point() - v->point()) );
-      }
-      points.push_back(CGAL::ORIGIN);
-	
-      local.insert(points.begin(), points.end());
-      Vertex_handle nv = local.nearest_vertex(CGAL::ORIGIN);
-	
-      return tessellate (local, nv, f);
+	    it = incident_vertices.begin();
+	    it != incident_vertices.end(); ++it)
+	{
+	  Vector n = (*it)->point() - v->point();
+	  dual_points.push_back (CGAL::ORIGIN + n / n.squared_length());
+	  //std::cerr << n << "\n";
+	}
+      for (typename DT::Finite_vertices_iterator
+	     it = sphere.finite_vertices_begin();
+	     it != sphere.finite_vertices_end(); ++it)
+	{
+	  Vector p = it->point() - CGAL::ORIGIN;
+	  dual_points.push_back (CGAL::ORIGIN + p / p.squared_length());
+	}
+      // DEBUG_SHOW(sphere.number_of_vertices ());
+      // DEBUG_SHOW(incident_vertices.size());
+      Polyhedron ch;
+      CGAL::convex_hull_3(dual_points.begin(), dual_points.end(), ch);
+       
+      // compute coordinates of points of primal polyhedron from dual one
+      std::map<Facet_handle, Point> extreme_points;
+      for (typename Polyhedron::Facet_iterator
+	     it = ch.facets_begin();
+	     it != ch.facets_end();
+	     ++it)
+	{
+	  typename Facet::Halfedge_handle h = it->halfedge();
+	  typename Facet::Plane_3 p ( h->vertex()->point(),
+				      h->next()->vertex()->point(),
+				      h->next()->next()->vertex()->point());
+	  extreme_points[it] = CGAL::ORIGIN + p.orthogonal_vector () / (-p.d());
+	}
+
+      // tesselate the primal polyhedron and apply F accordingly
+      
+      for (typename Polyhedron::Vertex_iterator 
+	     it = ch.vertices_begin();
+	     it != ch.vertices_end(); ++it)
+	{
+	  if (it->is_bivalent())
+	    continue;
+
+	  typename Polyhedron::Halfedge_around_vertex_circulator
+	    h0 = it->vertex_begin(), hf = h0--, hs = hf;
+	  hs ++;
+
+	  while(1)
+	    {
+	      f (extreme_points[h0->facet()],
+		 extreme_points[hf->facet()],
+		 extreme_points[hs->facet()]);
+	      if (hs == h0)
+		break;
+	      ++hs; ++hf;
+	    }
+	}
+      
+      return f;
    }
 }
    

@@ -101,9 +101,9 @@ void offset (const std::vector< typename CGAL::Point_3<K> > &points,
   DT dt(points.begin(), points.end()), sphere;
 
   if (N == 12)
-    CGAL::make_icosahedron_dt (sphere, 2*R);
+    CGAL::make_icosahedron_dt (sphere, R);
   else
-    CGAL::make_dodecahedron_dt (sphere, 2*R);
+    CGAL::make_dodecahedron_dt (sphere, R);
 
   boost::progress_display p(points.size(), std::cerr);  
   cov.clear();
