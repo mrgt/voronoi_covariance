@@ -98,12 +98,8 @@ void offset (const std::vector< typename CGAL::Point_3<K> > &points,
 {
   typedef CGAL::Delaunay_triangulation_3<K> DT;
 
-  DT dt(points.begin(), points.end()), sphere;
-
-  if (N == 12)
-    CGAL::make_icosahedron_dt (sphere, R);
-  else
-    CGAL::make_dodecahedron_dt (sphere, R);
+  typename CGAL::Sphere_discretization<K> sphere(R, N);
+  DT dt(points.begin(), points.end());
 
   boost::progress_display p(points.size(), std::cerr);  
   cov.clear();

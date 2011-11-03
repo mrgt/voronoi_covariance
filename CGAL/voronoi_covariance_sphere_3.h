@@ -5,123 +5,80 @@
 
 CGAL_BEGIN_NAMESPACE
 
-namespace internal
+template <class K>
+class Sphere_discretization
 {
-  template <class Point, class OutputIterator>
-  void
-  make_icosahedron (double R,
-		    OutputIterator out)
+  typedef typename K::FT FT;
+  FT _R;
+  size_t _N;
+  
+public:
+  Sphere_discretization (FT R, size_t N = 20) :
+    _R(R), _N(N)
   {
-    const double phi = (1.0 + ::sqrt(5))/2.0;
-    const double s = R / ::sqrt(phi + 2);
-    
-    *out ++ = Point(0, +s, +s*phi);
-    *out ++ = Point(0, -s, +s*phi);
-    *out ++ = Point(0, +s, -s*phi);
-    *out ++ = Point(0, -s, -s*phi);
-    
-    *out ++ = Point(+s, +s*phi, 0);
-    *out ++ = Point(+s, -s*phi, 0);
-    *out ++ = Point(-s, +s*phi, 0);
-    *out ++ = Point(-s, -s*phi, 0);
-    
-    *out ++ = Point(+s*phi, 0, +s);
-    *out ++ = Point(-s*phi, 0, +s);
-    *out ++ = Point(+s*phi, 0, -s);
-    *out ++ = Point(-s*phi, 0, -s);
+    if (_N != 8 && _N != 20)
+      _N = 20;
   }
   
-  template <class Point, class OutputIterator>
+  template <class OutputIterator>
   void
-  make_dodecahedron (double R,
-		     OutputIterator out)
+  operator ()(OutputIterator out) const
   {
-    const double phi = (1.0 + ::sqrt(5))/2.0;
-    const double one_phi = 1.0/phi;
-    const double s = R / ::sqrt(3.0);
-
-    *out ++ = Point(+s, +s, +s);
-    *out ++ = Point(-s, +s, +s);
-    *out ++ = Point(+s, -s, +s);
-    *out ++ = Point(-s, -s, +s);
-    *out ++ = Point(+s, +s, -s);
-    *out ++ = Point(-s, +s, -s);
-    *out ++ = Point(+s, -s, -s);
-    *out ++ = Point(-s, -s, -s);
-    
-    *out ++ = Point(0, +s*one_phi, +s*phi);
-    *out ++ = Point(0, -s*one_phi, +s*phi);
-    *out ++ = Point(0, +s*one_phi, -s*phi);
-    *out ++ = Point(0, -s*one_phi, -s*phi);
-    
-    *out ++ = Point(+s*one_phi, +s*phi, 0);
-    *out ++ = Point(-s*one_phi, +s*phi, 0);
-    *out ++ = Point(+s*one_phi, -s*phi, 0);
-    *out ++ = Point(-s*one_phi, -s*phi, 0);
-    
-    *out ++ = Point(+s*phi, 0, +s*one_phi);
-    *out ++ = Point(-s*phi, 0, +s*one_phi);
-    *out ++ = Point(+s*phi, 0, -s*one_phi);
-    *out ++ = Point(-s*phi, 0, -s*one_phi);
+    typedef typename K::Plane_3 Plane;
+   
+    if (_N == 8)
+      { 
+	static const FT phi = (FT(1) + ::sqrt(5))/FT(2);
+	static const FT s = FT(1) / ::sqrt(phi + FT(2));
+	
+	*out ++ = Plane(0, +s, +s*phi, -_R);
+	*out ++ = Plane(0, -s, +s*phi, -_R);
+	*out ++ = Plane(0, +s, -s*phi, -_R);
+	*out ++ = Plane(0, -s, -s*phi, -_R);
+	
+	*out ++ = Plane(+s, +s*phi, 0, -_R);
+	*out ++ = Plane(+s, -s*phi, 0, -_R);
+	*out ++ = Plane(-s, +s*phi, 0, -_R);
+	*out ++ = Plane(-s, -s*phi, 0, -_R);
+	
+	*out ++ = Plane(+s*phi, 0, +s, -_R);
+	*out ++ = Plane(-s*phi, 0, +s, -_R);
+	*out ++ = Plane(+s*phi, 0, -s, -_R);
+	*out ++ = Plane(-s*phi, 0, -s, -_R);
+      }
+    else if (_N == 20)
+      {
+	const FT phi = (FT(1) + ::sqrt(5))/FT(2);
+	const FT one_phi = FT(1)/phi;
+	const FT s = FT(1) / ::sqrt(3.0);
+	
+	*out ++ = Plane(+s, +s, +s, -_R);
+	*out ++ = Plane(-s, +s, +s, -_R);
+	*out ++ = Plane(+s, -s, +s, -_R);
+	*out ++ = Plane(-s, -s, +s, -_R);
+	*out ++ = Plane(+s, +s, -s, -_R);
+	*out ++ = Plane(-s, +s, -s, -_R);
+	*out ++ = Plane(+s, -s, -s, -_R);
+	*out ++ = Plane(-s, -s, -s, -_R);
+	
+	*out ++ = Plane(0, +s*one_phi, +s*phi, -_R);
+	*out ++ = Plane(0, -s*one_phi, +s*phi, -_R);
+	*out ++ = Plane(0, +s*one_phi, -s*phi, -_R);
+	*out ++ = Plane(0, -s*one_phi, -s*phi, -_R);
+	
+	*out ++ = Plane(+s*one_phi, +s*phi, 0, -_R);
+	*out ++ = Plane(-s*one_phi, +s*phi, 0, -_R);
+	*out ++ = Plane(+s*one_phi, -s*phi, 0, -_R);
+	*out ++ = Plane(-s*one_phi, -s*phi, 0, -_R);
+	
+	*out ++ = Plane(+s*phi, 0, +s*one_phi, -_R);
+	*out ++ = Plane(-s*phi, 0, +s*one_phi, -_R);
+	*out ++ = Plane(+s*phi, 0, -s*one_phi, -_R);
+	*out ++ = Plane(-s*phi, 0, -s*one_phi, -_R);
+      }
   }
-
-  template <class Vector>
-  void
-  perturb_points(Vector &p, double eps)
-  {
-    typedef typename Vector::value_type Point;
-    typename CGAL::Random_points_in_sphere_3<Point> r;
-
-    for (size_t i = 0; i < p.size(); ++i)
-      p[i] = p[i] + eps * (*r++ - CGAL::ORIGIN);
-  }
-}
-
-template <class DT>
-void
-make_icosahedron_dt(DT &dt, double R,
-		    double perturbation = 1e-3)
-{
-  typedef typename DT::Point Point;
-  typename std::vector<typename DT::Point> p;
-
-  internal::make_icosahedron<Point> (2*R, std::back_inserter(p));
-  internal::perturb_points(p, perturbation);
-  dt.insert(p.begin(), p.end());
-}
-
-template <class DT>
-void
-make_dodecahedron_dt(DT &dt, double R,
-		     double perturbation = 1e-3)
-{
-  typedef typename DT::Point Point;
-  typename std::vector<typename DT::Point> p;
-
-  internal::make_dodecahedron<Point> (2*R, std::back_inserter(p));
-  internal::perturb_points(p, perturbation);
-  dt.insert(p.begin(), p.end());
-}
-
-
-// void
-// make_truncated_icosahedron_dt(DT &dt, double R,
-// 			      double perturbation = 1e-3)
-// {
-//   typedef typename DT::Point Point;
+};
   
-//   typename std::vector<Point> p;
-//   internal::make_icosahedron<Point>  (2*R, p);
-//   internal::make_dodecahedron<Point> (2*R, p);
-
-//   typename CGAL::Random_points_in_sphere_3<Point> r;
-//   for (size_t i = 0; i < p.size(); ++i)
-//     p[i] = p[i] + perturbation * (*r++ - CGAL::ORIGIN);
-
-//   dt.insert(p.begin(), p.end());
-// }
-
-
 CGAL_END_NAMESPACE
 
 #endif
