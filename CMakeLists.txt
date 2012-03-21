@@ -39,3 +39,4 @@ link_libraries(${Boost_PROGRAM_OPTIONS_LIBRARY})
 link_libraries(${CGAL_LIBRARIES} ${CGAL_3RD_PARTY_LIBRARIES})
 
 add_executable  (vcm vcm.cpp)
+add_executable  (sphere sphere.cpp)
