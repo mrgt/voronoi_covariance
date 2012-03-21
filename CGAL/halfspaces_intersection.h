@@ -71,8 +71,8 @@ namespace internal
 
   template <class PlaneIterator, class Polyhedron, class K>
   void
-  intersection(PlaneIterator pbegin, PlaneIterator pend,
-	       Polyhedron &P, const K &k)
+  halfspaces_intersection(PlaneIterator pbegin, PlaneIterator pend,
+			  Polyhedron &P, const K &k)
   {
     typedef typename CGAL::Convex_hull_traits_3<K> Traits;
     typedef typename Polyhedron::HalfedgeDS HalfedgeDS;

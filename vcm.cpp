@@ -108,7 +108,8 @@ void offset (const std::vector< typename CGAL::Point_3<K> > &points,
   for (size_t i = 0; i < points.size(); ++i)
     {
       typename DT::Vertex_handle vh = dt.nearest_vertex(points[i]);
-      cov.push_back(CGAL::voronoi_covariance_3(dt, vh, sphere));
+      Covariance c = CGAL::voronoi_covariance_3(dt, vh, sphere);
+      cov.push_back(c);
       ++p;
     }
   std::cerr << "time: " <<  t.elapsed() << "s\n";    

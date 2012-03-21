@@ -19,6 +19,7 @@ namespace internal
    { 
       const FT det = (ax*cz*by - ax*bz*cy - ay*bx*cz +
 		      ay*cx*bz + az*bx*cy - az*cx*by)/60.0;
+
       R[0] += (ax*ax + ax*bx + ax*cx +
 	       bx*bx + bx*cx + cx*cx) * det;
       R[1] += (ax*ay + ax*by/2.0 + ax*cy/2.0 +
@@ -27,11 +28,13 @@ namespace internal
       R[2] += (ax*az + ax*bz/2.0 + ax*cz/2.0 + 
 	       bx*az/2.0 + bx*bz + bx*cz/2.0 + 
 	       cx*az/2.0 + cx*bz/2.0 + cx*cz) * det;
+
       R[3] += (ay*ay + ay*by + ay*cy + 
 	       by*by + by*cy + cy*cy) * det;
       R[4] += (az*ay + az*by/2.0 + az*cy/2.0 +
 	       bz*ay/2.0 + bz*by + bz*cy/2.0 +
 	       cz*ay/2.0 + cz*by/2.0 + cz*cy) * det;
+
       R[5] += (az*az + az*bz + az*cz +
 	       bz*bz + bz*cz + cz*cz) * det;
    }
@@ -51,10 +54,10 @@ namespace internal
 	 std::fill (_result.begin(), _result.end(), FT(0));
       }
       
-      template <class Vector>
-      inline void operator () (const Vector &a,
-			       const Vector &b,
-			       const Vector &c)
+      template <class Point>
+      inline void operator () (const Point &a,
+			       const Point &b,
+			       const Point &c)
       {
 	internal::covariance_matrix_tetrahedron (a[0], a[1], a[2],
 						 b[0], b[1], b[2],
@@ -67,6 +70,36 @@ namespace internal
 	 return _result;
       }
    };
+
+   template <class FT>
+   class Volume_accumulator_3
+   {
+   public:
+     typedef FT Result_type;
+     
+   private:
+     Result_type _result;
+     
+   public:
+     Volume_accumulator_3() : _result(0.0)
+     {}
+     
+     template <class Point>
+     inline void operator () (const Point &a,
+			      const Point &b,
+			      const Point &c)
+     {
+       const double  vol = CGAL::volume(a, b, c, Point(CGAL::ORIGIN));
+       std::cerr << "vol = " << vol << "\n";
+       _result += vol;
+     }
+     
+     const Result_type &result() const
+     {
+       return _result;
+     }
+   };
+
 
   template <class DT, class Sphere, class F>
   F& tessellate_and_intersect(const DT &dt,
@@ -98,7 +131,7 @@ namespace internal
       sphere(std::back_inserter(planes));
 
       Polyhedron P;
-      intersection(planes.begin(), planes.end(), P, K());
+      halfspaces_intersection(planes.begin(), planes.end(), P, K());
 
       // apply f to the triangles on the boundary of P
       for (typename Polyhedron::Facet_iterator it = P.facets_begin();
@@ -173,6 +206,19 @@ voronoi_covariance_3 (const DT &dt,
 
   return internal::tessellate_and_intersect(dt, v, sphere, ca).result();
 }
+
+template <class DT, class Sphere>
+typename DT::Geom_traits::FT
+voronoi_volume_3 (const DT &dt,
+		  typename DT::Vertex_handle v,
+		  const Sphere &sphere)
+{
+  typedef typename DT::Geom_traits::FT FT;
+  typename internal::Volume_accumulator_3<FT> va;
+
+  return internal::tessellate_and_intersect(dt, v, sphere, va).result();
+}
+
 
 template <class FT>
 std::ostream &
