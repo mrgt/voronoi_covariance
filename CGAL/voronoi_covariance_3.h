@@ -90,7 +90,7 @@ namespace internal
 			      const Point &c)
      {
        const double  vol = CGAL::volume(a, b, c, Point(CGAL::ORIGIN));
-       std::cerr << "vol = " << vol << "\n";
+       //std::cerr << "vol = " << vol << "\n";
        _result += vol;
      }
      
