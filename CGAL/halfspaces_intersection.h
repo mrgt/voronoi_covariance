@@ -30,7 +30,7 @@ namespace internal
       
       B.begin_surface(_primal.size_of_facets(),
 		      _primal.size_of_vertices(),
-		      _primal.size_of_vertices());
+		      _primal.size_of_halfedges());
       
       // compute coordinates of extreme vertices in the dual polyhedron
       // from primal faces
